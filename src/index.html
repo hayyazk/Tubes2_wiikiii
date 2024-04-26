@@ -35,12 +35,12 @@
             </li>
             {{ end }}
         </ul>
-        {{ if (gt .ArticlesTraversed 0) }}
+        {{ if (gt .ArticleDistance 0) }}
         <p>Time elapsed: {{ .TimeElapsed }}</p>
         <p>Articles visited: {{ .ArticlesVisited }}</p>
-        <p>Shortest path: {{ .ArticlesTraversed }} articles</p>
-        {{ else }}
-        <p></p>
+        <p>Shortest path: {{ .ArticleDistance }} articles</p>
+        {{ else if (eq .ArticleDistance 0) }}
+        <p>Not found within time constraint</p>
         {{ end }}
     </div>
 

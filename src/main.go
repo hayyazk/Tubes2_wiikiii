@@ -5,32 +5,13 @@ import (
 	"html/template"
 	"net/http"
 	"net/url"
-	"strings"
 )
-
-type Article struct {
-	Title string
-	URL   string
-}
-
-type Result struct {
-	Articles          []Article
-	ArticlesTraversed int
-	ArticlesVisited   int
-	TimeElapsed       string
-}
 
 var t = template.Must(template.ParseFiles("index.html"))
 
-func urlBuilder(title string) string {
-	base := "https://en.wikipedia.org/wiki/"
-	cleanTitle := strings.ReplaceAll(strings.TrimSpace(title), " ", "_")
-	return base + cleanTitle
-}
-
 func mainHandler(w http.ResponseWriter, r *http.Request) {
 	var result Result
-	result.ArticlesTraversed = 0
+	result.ArticleDistance = -1
 	t.Execute(w, result)
 }
 
