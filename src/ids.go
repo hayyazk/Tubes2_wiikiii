@@ -9,9 +9,6 @@ import (
 )
 
 var depth = make(map[string]int)
-// var childOfDepth = make(map[int][]string)
-// var mtx sync.RWMutex
-
 
 // get links
 func getLinksIDS(current string, parent *map[string]string) []string {
@@ -46,84 +43,10 @@ func getLinksIDS(current string, parent *map[string]string) []string {
 	return urls
 }
 
-// // get links but to a channel
-// func getLinksIDSConcurrent(next chan string, current string, parent *map[string]string) {
-// 	// fmt.Println("soo...")
-// 	resp, err := http.Get(current)
-// 	if err != nil {
-// 		//fmt.Println(err)
-// 		return
-// 	}
-// 	defer resp.Body.Close()
-
-// 	doc, err := goquery.NewDocumentFromReader(resp.Body)
-// 	if err != nil {
-// 		//fmt.Println(err)
-// 		return
-// 	}
-
-// 	content := doc.Find("div#bodyContent").Find("a")
-// 	content.Each(func(index int, item *goquery.Selection) {
-// 		link, _ := item.Attr("href")
-// 		link, valid := isAcceptable(link)
-// 		if !valid {
-// 			return
-// 		}
-// 		mtx1.Lock()
-// 		if (*parent)[link] == "" {
-// 			(*parent)[link] = current
-// 			depth[link] = depth[current] + 1
-// 			next <- link
-// 		}
-// 		mtx1.Unlock()
-// 	})
-// }
-
-// func getMultipleLinksIDS(prev, next chan string, wg *sync.WaitGroup, parent *map[string]string) {
-// 	i := 0
-// 	for item := range prev {
-// 		i++
-// 		getLinksIDSConcurrent(next, item, parent)
-// 	}
-// 	(*wg).Done()
-// }
-
-// func BFSLike(stack []string, max int, redirectMap map[string]bool, parent *map[string]string) []string {
-// 	for len(stack) > 0 && depth[stack[0]] == max {
-// 		// fmt.Println("IS IT HERE")
-// 		if redirectMap[stack[0]] {
-// 			return stack
-// 		}
-// 		stack = stack[1:]
-// 	}
-
-// 	if len(stack) == 0 {
-// 		return nil
-// 	}
-// 	var prev = make(chan string)
-// 	var next = make(chan string, 1000)
-// 	var wg sync.WaitGroup
-
-// 	wg.Add(80)
-// 	for i:=0; i<80; i++ {
-// 		go getMultipleLinksIDS(prev, next, &wg, parent)
-// 	}
-// 	go closeChan(next, &wg)
-// 	go putInChan(stack, prev)
-
-// 	stack = nil
-// 	for link := range next {
-// 		// fmt.Println("heyyy")
-// 		stack = append([]string{link}, stack...)
-// 	}
-// 	fmt.Println("eyy")
-
-// 	return stack
-// }
-
 // depth limited search
 func dls(stack []string, max int, redirectMap map[string]bool, parent *map[string]string) ([]string, bool, int) {
 	totalVisited := 0
+
 	for len(stack) > 0 {
 		totalVisited++
 		if redirectMap[stack[0]] {
@@ -179,7 +102,7 @@ func IDSSearch(source, dest Article) Result {
 
 	result.ArticlesVisited = totalVisited
 	result.ArticleDistance = len(result.Articles) - 1
-	result.TimeElapsed = time.Since(start).String()
+	result.TimeElapsed = time.Since(start).Milliseconds()
 
 	return result
 }

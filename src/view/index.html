@@ -50,7 +50,7 @@
                 {{ end }}
             </ul>
             {{ if (gt .ArticleDistance -1) }}
-            <p>Time elapsed: {{ .TimeElapsed }}</p>
+            <p>Time elapsed: {{ .TimeElapsed }}ms</p>
             <p>Articles visited: {{ .ArticlesVisited }}</p>
             <p>Shortest path: {{ .ArticleDistance }} articles</p>
             {{ else if (eq .ArticleDistance -1) }}

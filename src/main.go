@@ -41,18 +41,12 @@ func searchHandler(w http.ResponseWriter, r *http.Request) {
 
 	var result Result
 
-	go func() {
-		time.Sleep(5 * time.Minute)
-		result.ArticleDistance = -1
-		t.Execute(w, result)
-	} ()
-
 	if dest.Title == source.Title {
 		start := time.Now()
 		result.ArticleDistance = 0
 		result.ArticlesVisited = 1
 		result.Articles = append(result.Articles, dest)
-		result.TimeElapsed = time.Since(start).String()
+		result.TimeElapsed = time.Since(start).Milliseconds()
 	} else {
 		if algorithm == "bfs" {
 			result = BFSSearch(source, dest)

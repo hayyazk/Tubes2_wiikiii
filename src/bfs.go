@@ -59,7 +59,7 @@ func putInChan(arr []string, ch chan string) {
 }
 
 // scrape multiple pages
-func getMultipleLinksBFS(prev, next chan string, wg *sync.WaitGroup, parent *map[string]string) {
+func getMultipleLinks(prev, next chan string, wg *sync.WaitGroup, parent *map[string]string) {
 	i := 0
 	for item := range prev {
 		i++
@@ -81,7 +81,6 @@ func bfs(source string, redirectMap map[string]bool) ([]string, int) {
 
 	// search loop, ends when destination page is found
 	for {
-		fmt.Println(depth)
 		// variables for concurrent search
 		var prev = make(chan string)
 		var next = make(chan string, 1000)
@@ -90,7 +89,7 @@ func bfs(source string, redirectMap map[string]bool) ([]string, int) {
 		// setup 100 threads to scrape links
 		wg.Add(100)
 		for i:=0; i<100; i++ {
-			go getMultipleLinksBFS(prev, next, &wg, &parent)
+			go getMultipleLinks(prev, next, &wg, &parent)
 		}
 		go closeChan(next, &wg)
 
@@ -99,7 +98,6 @@ func bfs(source string, redirectMap map[string]bool) ([]string, int) {
 
 		// iterate over links recieved from scraping, put in queue
 		queue = nil
-		fmt.Println(depth)
 		for link := range next {
 			totalVisited++
 			if redirectMap[link] {
@@ -110,6 +108,12 @@ func bfs(source string, redirectMap map[string]bool) ([]string, int) {
 			queue = append(queue, link)
 		}
 		if found {
+			for len(prev) > 0 {
+				<- prev
+			}
+			for len(next) > 0 {
+				<- next
+			}
 			break
 		}
 		depth++
@@ -130,7 +134,7 @@ func BFSSearch(source, dest Article) Result {
 	result.Articles = append(result.Articles, source)
 
 	path, totalVisited := bfs(source.URL, redirectMap)
-
+	
 	for _, p := range path {
 		var article Article
 		article.URL = p
@@ -140,7 +144,7 @@ func BFSSearch(source, dest Article) Result {
 
 	result.ArticlesVisited = totalVisited
 	result.ArticleDistance = len(result.Articles) - 1
-	result.TimeElapsed = time.Since(start).String()
+	result.TimeElapsed = time.Since(start).Milliseconds()
 
 	return result
 }

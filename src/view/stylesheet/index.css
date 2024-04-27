@@ -44,11 +44,16 @@ input[type="submit"] {
     grid-area: result;
 }
 
+ul.result {
+    list-style-position: inside;
+    padding-left: 0;
+}
+
 .container {
     margin: auto;
     padding: 10px;
     padding-bottom: 15px;
-    width: 60%;
+    width: 75%;
     display: grid;
     grid-template-areas: 'inputs result';
     gap: 10px;
