@@ -62,3 +62,33 @@ func getTitle(link string) string {
 	title := doc.Find("h1#firstHeading").Text()
 	return title
 }
+
+func buildWhatLinksHereURL(title string) string {
+	return "https://en.wikipedia.org/wiki/Special:WhatLinksHere?target=" + adjustTitle(title) + "&namespace=0&limit=500&hidetrans=1&hidelinks=1"
+}
+
+func getRedirects(link string, redirectMap *map[string]bool) {
+	resp, err := http.Get(link)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	defer resp.Body.Close()
+
+	doc, err := goquery.NewDocumentFromReader(resp.Body)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	content := doc.Find("ul#mw-whatlinkshere-list").Find("a.mw-redirect")
+	content.Each(func(index int, item *goquery.Selection) {
+		title := item.Text();
+		if title != "edit" {
+			(*redirectMap)[urlBuilder(title)] = true
+		}
+	})
+	next, exist := doc.Find("div.mw-pager-navigation-bar").Find("a.mw-nextlink").Attr("href")
+	if exist {
+		getRedirects("https://en.wikipedia.org" + next, redirectMap)
+	} 
+}

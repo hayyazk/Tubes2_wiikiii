@@ -3,19 +3,16 @@ package main
 import (
 	"fmt"
 	"net/http"
-	"strings"
 	"sync"
 	"time"
 
 	"github.com/PuerkitoBio/goquery"
 )
 
-// var parent = make(map[string]string)
-// var redirect = make(map[string]string)
 var mut sync.RWMutex
 
+// get links from a page
 func getLinksBFS(next chan string, current string, parent *map[string]string) {
-	//var links []string
 	resp, err := http.Get(current)
 	if err != nil {
 		fmt.Println(err)
@@ -31,52 +28,38 @@ func getLinksBFS(next chan string, current string, parent *map[string]string) {
 	content := doc.Find("div#bodyContent").Find("a")
 	content.Each(func(index int, item *goquery.Selection) {
 		link, _ := item.Attr("href")
-		// class, _ := item.Attr("class")
 		link, valid := isAcceptable(link)
 		if !valid {
 			return
 		}
-
-		// if class == "mw-redirect" {
-		// 	mut.Lock()
-		// 	if redirect[link] == "" {
-		// 		fmt.Println("hehe")
-		// 		title := getTitle(link)
-		// 		newlink := urlBuilder(title)
-		// 		redirect[link] = newlink
-		// 		link = newlink
-		// 	} else {
-		// 		link = redirect[link]
-		// 	}
-		// 	mut.Unlock()
-		// }
 		
 		mut.Lock()
 		if (*parent)[link] == "" {
 			(*parent)[link] = current
-			//link = append(urls, link)
 			next <- link
 		}
 		mut.Unlock()
 	})
 }
 
+// close channel once all waitgroups are done
 func closeChan(ch chan string, wg *sync.WaitGroup) {
 	(*wg).Wait()
 	close(ch)
 }
 
+// put list items in channel
 func putInChan(arr []string, ch chan string) {
 	i := 0
 	for _, item := range arr {
 		i++
 		ch <- item
 	}
-	fmt.Println("Put this amount in prev:", i)
 	close(ch)
 }
 
-func getMultipleLinks(prev, next chan string, wg *sync.WaitGroup, parent *map[string]string) {
+// scrape multiple pages
+func getMultipleLinksBFS(prev, next chan string, wg *sync.WaitGroup, parent *map[string]string) {
 	i := 0
 	for item := range prev {
 		i++
@@ -85,12 +68,13 @@ func getMultipleLinks(prev, next chan string, wg *sync.WaitGroup, parent *map[st
 	(*wg).Done()
 }
 
-func bfs(source, dest string) ([]string, int) {
+func bfs(source string, redirectMap map[string]bool) ([]string, int) {
 	// initial declarations
 	var parent = make(map[string]string)
 	parent[source] = "none"
 	var queue []string
 	queue = append(queue, source)
+	var foundLink string
 	found := false
 	depth := 0
 	totalVisited := 1
@@ -106,7 +90,7 @@ func bfs(source, dest string) ([]string, int) {
 		// setup 100 threads to scrape links
 		wg.Add(100)
 		for i:=0; i<100; i++ {
-			go getMultipleLinks(prev, next, &wg, &parent)
+			go getMultipleLinksBFS(prev, next, &wg, &parent)
 		}
 		go closeChan(next, &wg)
 
@@ -118,8 +102,9 @@ func bfs(source, dest string) ([]string, int) {
 		fmt.Println(depth)
 		for link := range next {
 			totalVisited++
-			if strings.EqualFold(link, dest) {
+			if redirectMap[link] {
 				found = true
+				foundLink = link
 				break
 			}
 			queue = append(queue, link)
@@ -130,18 +115,21 @@ func bfs(source, dest string) ([]string, int) {
 		depth++
 	}
 	if found {
-		return getPath(dest, parent), totalVisited
+		return getPath(foundLink, parent), totalVisited
 	}
 	return nil, 0
 }
 
 func BFSSearch(source, dest Article) Result {
 	var result Result
+	var redirectMap = make(map[string]bool)
+	redirectMap[dest.URL] = true
+	getRedirects(buildWhatLinksHereURL(dest.Title), &redirectMap)
 	
 	start := time.Now()
 	result.Articles = append(result.Articles, source)
 
-	path, totalVisited := bfs(source.URL, dest.URL)
+	path, totalVisited := bfs(source.URL, redirectMap)
 
 	for _, p := range path {
 		var article Article

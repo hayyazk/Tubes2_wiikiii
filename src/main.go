@@ -28,12 +28,14 @@ func searchHandler(w http.ResponseWriter, r *http.Request) {
 	algorithm := queries.Get("algorithm")
 
 	var source Article
-	source.Title = sourceTitle
-	source.URL = urlBuilder(sourceTitle)
+	tempURL := urlBuilder(sourceTitle)
+	source.Title = getTitle(tempURL)
+	source.URL = urlBuilder(source.Title)
 
 	var dest Article
-	dest.Title = destTitle
-	dest.URL = urlBuilder(destTitle)
+	tempURL = urlBuilder(destTitle)
+	dest.Title = getTitle(tempURL)
+	dest.URL = urlBuilder(dest.Title)
 
 	var result Result
 	if algorithm == "bfs" {
