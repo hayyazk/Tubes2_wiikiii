@@ -54,7 +54,7 @@
             <p>Articles visited: {{ .ArticlesVisited }}</p>
             <p>Shortest path: {{ .ArticleDistance }} articles</p>
             {{ else if (eq .ArticleDistance -1) }}
-            <p class="message">Not found within time constraint</p>
+            <p class="message">Path not found</p>
             {{ else }}
             <p class="message">Awaiting input...</p>
             {{ end }}

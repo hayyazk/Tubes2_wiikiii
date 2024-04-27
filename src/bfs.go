@@ -129,7 +129,10 @@ func BFSSearch(source, dest Article) Result {
 	var redirectMap = make(map[string]bool)
 	redirectMap[dest.URL] = true
 	getRedirects(buildWhatLinksHereURL(dest.Title), &redirectMap)
-	
+	if redirectMap["PAGE_NOT_FOUND"] {
+		result.ArticleDistance = -1
+		return result
+	}
 	start := time.Now()
 	result.Articles = append(result.Articles, source)
 

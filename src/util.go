@@ -87,6 +87,11 @@ func getRedirects(link string, redirectMap *map[string]bool) {
 		fmt.Println(err)
 		return
 	}
+	redlink, _ := doc.Find("a.new").Attr("title")
+	if strings.Contains(redlink, "(page does not exist)") {
+		(*redirectMap)["PAGE_NOT_FOUND"] = true
+		return
+	}
 	content := doc.Find("ul#mw-whatlinkshere-list").Find("a.mw-redirect")
 	content.Each(func(index int, item *goquery.Selection) {
 		title := item.Text();
