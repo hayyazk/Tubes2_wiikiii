@@ -5,13 +5,15 @@ import (
 	"html/template"
 	"net/http"
 	"net/url"
+	"path"
+	"time"
 )
 
-var t = template.Must(template.ParseFiles("index.html"))
+var t = template.Must(template.ParseFiles(path.Join("view", "index.html")))
 
 func mainHandler(w http.ResponseWriter, r *http.Request) {
 	var result Result
-	result.ArticleDistance = -1
+	result.ArticleDistance = -2
 	t.Execute(w, result)
 }
 
@@ -38,11 +40,26 @@ func searchHandler(w http.ResponseWriter, r *http.Request) {
 	dest.URL = urlBuilder(dest.Title)
 
 	var result Result
-	if algorithm == "bfs" {
-		result = BFSSearch(source, dest)
-	}
-	if algorithm == "ids" {
-		result = IDSSearch(source, dest)
+
+	go func() {
+		time.Sleep(5 * time.Minute)
+		result.ArticleDistance = -1
+		t.Execute(w, result)
+	} ()
+
+	if dest.Title == source.Title {
+		start := time.Now()
+		result.ArticleDistance = 0
+		result.ArticlesVisited = 1
+		result.Articles = append(result.Articles, dest)
+		result.TimeElapsed = time.Since(start).String()
+	} else {
+		if algorithm == "bfs" {
+			result = BFSSearch(source, dest)
+		}
+		if algorithm == "ids" {
+			result = IDSSearch(source, dest)
+		}
 	}
 
 	t.Execute(w, result)
@@ -51,6 +68,7 @@ func searchHandler(w http.ResponseWriter, r *http.Request) {
 func main() {
 	mux := http.NewServeMux()
 	fmt.Println("http://localhost:8080/")
+	mux.Handle("/css/", http.StripPrefix("/css/", http.FileServer(http.Dir("view/stylesheet"))))
 	mux.HandleFunc("/", mainHandler)
 	mux.HandleFunc("/search", searchHandler)
 	http.ListenAndServe(":8080", mux)

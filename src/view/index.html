@@ -1,0 +1,97 @@
+
+<!DOCTYPE html> 
+<html> 
+  
+<head> 
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.13.2/themes/base/jquery-ui.css"/> 
+    <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"
+    integrity="sha256-lSjKY0/srUM9BE3dPm+c4fBo1dky2v27Gdjm2uoZaL0="
+    crossorigin="anonymous"></script> 
+    <link rel="stylesheet" href="/css/index.css">
+</head> 
+
+<body> 
+
+    <div class="header">
+        <h1><b>Wikiracer</b></h1>
+        <p class="subtitle">Finding the shortest path from one wikipedia article to another</p>
+        <p class="subtitle">Tugas Besar 2 IF2211 Strategi Algoritma</p>
+    </div>
+    <br>
+    <div class="container">
+        <div class="inputs">
+            <h2>Inputs</h2>
+            <form action="/search" method="GET"> 
+                <label>Source <br>
+                    <input class="search" type="text" name="source" value=""/>
+                </label><br><br>
+                <label>Destination <br>
+                    <input class="search" type="text" name="dest" value=""/>
+                </label><br><br>
+                <label for="algorithm">Algorithm <br>
+                    <select name="algorithm" id="algorithm">
+                        <option value="bfs">Breadth First Search (BFS)</option>
+                        <option value="ids">Iterative Deepening Search (IDS)</option>
+                    </select>
+                </label>
+                <br><br>
+                <input type="submit" value="Submit"> 
+            </form>
+        </div>
+    
+        <div class="result">
+            <h2>Results</h2>
+            <ul class="result">
+                {{ range .Articles }}
+                <li class="article">
+                    <a class="result-link" href="{{ .URL }}" target="_blank">{{.Title}}</a>
+                </li>
+                {{ end }}
+            </ul>
+            {{ if (gt .ArticleDistance -1) }}
+            <p>Time elapsed: {{ .TimeElapsed }}</p>
+            <p>Articles visited: {{ .ArticlesVisited }}</p>
+            <p>Shortest path: {{ .ArticleDistance }} articles</p>
+            {{ else if (eq .ArticleDistance -1) }}
+            <p class="message">Not found within time constraint</p>
+            {{ else }}
+            <p class="message">Awaiting input...</p>
+            {{ end }}
+        </div>
+    </div>
+
+    <div class="footer">
+        <ul class="footer">
+            <li class="footer">Made by:</li>
+            <li class="footer">Muhammad Fiqri | 10023519</li>
+            <li class="footer">Naufal Baldemar Ardanni | 13521154</li>
+            <li class="footer">Hayya Zuhailii Kinasih | 13522102</li>
+        </ul>
+    </div>
+
+    <script type="text/javascript">
+        $(".search").autocomplete({ 
+        source: function (request, response) { 
+            console.log(request.term); 
+            $.ajax({ 
+                url: "http://en.wikipedia.org/w/api.php", 
+                dataType: "jsonp", 
+                data: { 
+                    action: "opensearch", 
+                    format: "json", 
+                    search: request.term, 
+                    namespace: 0, 
+                    limit: 10, 
+                }, 
+                success: function (data) { 
+                    response(data[1]); 
+                }, 
+            }); 
+        }, 
+    });
+    </script> 
+
+</body> 
+  
+</html> 
